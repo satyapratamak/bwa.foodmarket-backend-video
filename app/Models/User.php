@@ -10,6 +10,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Jetstream\HasTeams;
 use Laravel\Sanctum\HasApiTokens;
+use Carbon\Carbon;
 
 class User extends Authenticatable
 {
@@ -27,6 +28,8 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name', 'email', 'password',
+        'address', 'house_number', 'phone_number', 
+        'city', 'roles'
     ];
 
     /**
@@ -58,4 +61,12 @@ class User extends Authenticatable
     protected $appends = [
         'profile_photo_url',
     ];
+
+    public function getCreatedAtAttribute($value) {
+        return Carbon::parse($value)->timestamp;
+    }
+
+    public function getUpdatedAtAttribute($value) {
+        return Carbon::parse($value)->timestamp;
+    }
 }
