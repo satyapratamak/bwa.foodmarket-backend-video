@@ -6,14 +6,16 @@ namespace App\Http\Controllers\API;
 use Exception;
 use App\Models\User;
 use Illuminate\Http\Request;
-use PasswordValidationRules;
+//use PasswordValidationRules;
 
 
 use App\Helpers\ResponseFormatter;
 use App\Http\Controllers\Controller;
-//use App\Actions\Fortify\PasswordValidationRules;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use App\Actions\Fortify\PasswordValidationRules;
+
 
 class UserController extends Controller
 {
@@ -103,6 +105,59 @@ class UserController extends Controller
                 'message' => 'Something went wrong',
                 'error' => $error,
             ], 'Registration Failed', 500);
+        }
+    }
+
+    public function logout(Request $request)
+    {
+        $token = $request->user()->currentAccessToken()->delete();
+        return ResponseFormatter::success($token, 'Token Revoked');
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $data = $request->all();
+        $user = Auth::user();
+        $user->update($data);
+        //$user->profile = $data;
+
+        return ResponseFormatter::success($user, 'Profile Updated');
+    }
+
+    public function fetch(Request $request)
+    {
+        return ResponseFormatter::success($request->user(), 'User Profile Data has been retrieved');
+    }
+
+    public function updatePhoto(Request $request)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'file' => 'required|image|max:2048',
+            ]
+
+        );
+
+        if ($validator->fails()) {
+            return ResponseFormatter::error(
+                ['error' => $validator->errors()],
+                'Photo update failed',
+                401
+            );
+        }
+
+        // $validator->success
+        if ($request->file('file')) {
+            $file = $request->file->store('assets/user', 'public');
+            $user = Auth::user();
+            $user->profile_photo_url = $file;
+            $user->update();
+
+            return ResponseFormatter::success(
+                [$file],
+                'Image File successfully uploaded',
+            );
         }
     }
 }
